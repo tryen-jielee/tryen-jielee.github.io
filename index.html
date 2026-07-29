@@ -518,7 +518,7 @@ const exportBtn = document.getElementById('exportBtn');
 const sheetsStatus = document.getElementById('sheetsStatus');
 
 // Hard-coded Apps Script Web App URL — the "Export to Sheet" button posts straight to this.
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwrniBS1yVFhTtcFPh5HKmwDvA3xXrVVSp1RGc8-6yK5g_GWp9jKZsM5YXRP0FUe4Rf/exec';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyFpnujRDB2QsFGKw0dp9BCnanBmvKwfX5_ImEEutgckgIewQq51qvzy-waYP4g-2k-/exec';
 
 // ---------- Inspector multi-select ----------
 function getSelectedInspectors(){
@@ -1499,7 +1499,7 @@ exportBtn.addEventListener('click', async () => {
 
   // Posts to the OQA SemiFG Data Google Sheet's own Apps Script Web App (separate
   // deployment from the FG tab), so submissions land straight in that sheet.
-  const SEMI_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbw0UTzfMQF55iKLBlQKOmjY-oicIKhzZsoFZrP6lz9m4gxS3gLSWR6y-bRhiwBK06NK0Q/exec';
+  const SEMI_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyE2-61LTb7_20pxbX6HIY6ohiflqOznVBlIb4a4fmuonF0HDDSDsKFoVmaDoC7ejpq/exec';
 
   exportBtn.addEventListener('click', async () => {
     if(rows.length === 0) return;
