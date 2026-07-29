@@ -503,7 +503,7 @@
         <table id="lookupTable">
           <thead id="lookupThead"></thead>
           <tbody id="lookupTbody">
-            <tr><td class="empty-row">Search above to pull matching rows straight from the sheet — no need to open Google Sheets.</td></tr>
+            <tr><td class="empty-row">Search above — checks the last 3 months by default, with an option to search full history if nothing recent turns up.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1672,7 +1672,8 @@ exportBtn.addEventListener('click', async () => {
     return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  async function runSearch(){
+  async function runSearch(scope){
+    scope = scope || 'recent';
     const q = lookupInput.value.trim();
     if(!q){
       lookupError.style.display = 'flex';
@@ -1681,13 +1682,13 @@ exportBtn.addEventListener('click', async () => {
     }
     lookupError.style.display = 'none';
     lookupStatus.style.display = 'block';
-    lookupStatus.textContent = 'Searching…';
+    lookupStatus.textContent = scope === 'full' ? 'Searching full history…' : 'Searching…';
     lookupCount.textContent = '';
     lookupBtn.disabled = true;
     lookupTbody.innerHTML = '<tr><td class="empty-row">Searching…</td></tr>';
 
     const dataset = datasetSelect.value;
-    const url = LOOKUP_URLS[dataset] + '?q=' + encodeURIComponent(q);
+    const url = LOOKUP_URLS[dataset] + '?q=' + encodeURIComponent(q) + '&scope=' + scope;
 
     try {
       const res = await fetch(url, { method: 'GET' });
@@ -1705,8 +1706,17 @@ exportBtn.addEventListener('click', async () => {
 
       if(matches.length === 0){
         lookupThead.innerHTML = '';
-        lookupTbody.innerHTML = '<tr><td class="empty-row">No matching rows found for "' + escapeHtmlLookup(q) + '".</td></tr>';
-        lookupStatus.textContent = `Scanned ${data.totalScanned ?? '—'} rows — no matches.`;
+        if(data.canExpandToFull){
+          lookupTbody.innerHTML = '<tr><td class="empty-row">'
+            + 'No records in the last 3 months for "' + escapeHtmlLookup(q) + '". '
+            + '<button class="btn btn-ghost" id="lookupExpandBtn" style="margin-left:8px; padding:6px 14px; font-size:12px;">Search full history</button>'
+            + '</td></tr>';
+          const expandBtn = document.getElementById('lookupExpandBtn');
+          if(expandBtn) expandBtn.addEventListener('click', () => runSearch('full'));
+        } else {
+          lookupTbody.innerHTML = '<tr><td class="empty-row">No matching rows found for "' + escapeHtmlLookup(q) + '", even across full history.</td></tr>';
+        }
+        lookupStatus.textContent = `Scanned ${data.totalScanned ?? '—'} rows (${scope === 'full' ? 'full history' : 'last 3 months'}) — no matches.`;
         lookupCount.textContent = '';
         return;
       }
@@ -1715,7 +1725,7 @@ exportBtn.addEventListener('click', async () => {
       lookupTbody.innerHTML = matches.map(row => '<tr>' + row.map(cell => `<td>${escapeHtmlLookup(cell)}</td>`).join('') + '</tr>').join('');
 
       lookupCount.textContent = `(${matches.length}${matches.length >= 200 ? '+' : ''} match${matches.length === 1 ? '' : 'es'})`;
-      lookupStatus.textContent = `Scanned ${data.totalScanned ?? '—'} rows.` + (matches.length >= 200 ? ' Showing first 200 matches — narrow your search for a tighter result set.' : '');
+      lookupStatus.textContent = `Scanned ${data.totalScanned ?? '—'} rows (${scope === 'full' ? 'last 3 months + full history' : 'last 3 months'}).` + (matches.length >= 200 ? ' Showing first 200 matches — narrow your search for a tighter result set.' : '');
     } catch(err){
       lookupError.style.display = 'flex';
       lookupError.textContent = '⚠ ' + err.message;
@@ -1728,11 +1738,11 @@ exportBtn.addEventListener('click', async () => {
     }
   }
 
-  lookupBtn.addEventListener('click', runSearch);
+  lookupBtn.addEventListener('click', () => runSearch('recent'));
   lookupInput.addEventListener('keydown', (e) => {
     if(e.key === 'Enter'){
       e.preventDefault();
-      runSearch();
+      runSearch('recent');
     }
   });
 })();
